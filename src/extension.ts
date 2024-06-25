@@ -5,7 +5,7 @@ import { QuickPickItem } from "vscode";
 
 class TabGroupContext {
   groups: string[];
-  editors: vscode.TextEditor[];
+  editors: (readonly vscode.TextEditor[])[];
   constructor() {
     this.groups = [];
     this.editors = [];
@@ -22,24 +22,24 @@ class TabGroupContext {
   addGroup(fileName: string) {
     this.groups.push(fileName);
   }
-  addEditor(editor: vscode.TextEditor) {
-    this.editors.push(editor);
+  addEditors(editors: readonly vscode.TextEditor[]) {
+    this.editors.push(editors);
   }
 }
 
 class TabGroupPickItem implements QuickPickItem {
   label: string;
   description?: string | undefined;
-  public editor: vscode.TextEditor;
+  //   public editors: readonly vscode.TextEditor[];
 
   constructor(
     public name: string,
     public path: string,
-    editor: vscode.TextEditor
+    public editors: readonly vscode.TextEditor[]
   ) {
     this.label = name;
     this.description = path;
-    this.editor = editor;
+    this.editors = editors;
   }
 }
 
@@ -65,11 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
       tabContext.addGroup(activeTab.activeTab?.label);
     }
 
-    // @todo: use visibleTextEditors for multiple editors
-    const activeEditor = vscode.window.activeTextEditor;
-    if (activeEditor) {
-      tabContext.addEditor(activeEditor);
-    }
+    const visibleEditors = vscode.window.visibleTextEditors;
+    tabContext.addEditors(visibleEditors);
 
     console.log(tabContext.getTabs());
   });
@@ -79,28 +76,23 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       console.log("HELPPP");
       const item = await vscode.window.showQuickPick(
-        tabContext
-          .getEditors()
-          .map(
-            (item) =>
-              new TabGroupPickItem(
-                item.document.fileName,
-                item.document.fileName,
-                item
-              )
-          ),
-        {
-          placeHolder: "pick an editor",
-        }
+        tabContext.getEditors().map((item) => {
+          // item is a list of editors
+          return new TabGroupPickItem("lorem", "ipsum", item);
+        }),
+        { placeHolder: "pick an editor" }
       );
       console.log("huh");
 
       if (item instanceof TabGroupPickItem) {
-        // vscode.window.showInformationMessage(item.label);
-        console.log(item);
-        vscode.window.showTextDocument(item.editor.document, {
-          viewColumn: item.editor.viewColumn,
-        });
+        // @todo: close currently visible editors
+
+        // show the editors
+        for (const editor of item.editors) {
+          vscode.window.showTextDocument(editor.document, {
+            viewColumn: editor.viewColumn,
+          });
+        }
       } else {
         console.log(item);
         vscode.window.showInformationMessage("raa");
