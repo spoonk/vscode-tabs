@@ -4,42 +4,46 @@ import * as vscode from "vscode";
 import { QuickPickItem } from "vscode";
 
 class TabGroupContext {
-  groups: string[];
-  editors: (readonly vscode.TextEditor[])[];
+  groups: Group[];
+
   constructor() {
     this.groups = [];
-    this.editors = [];
   }
 
-  getTabs() {
+  getGroups() {
     return this.groups;
   }
 
-  getEditors() {
-    return this.editors;
-  }
-
-  addGroup(fileName: string) {
-    this.groups.push(fileName);
-  }
-  addEditors(editors: readonly vscode.TextEditor[]) {
-    this.editors.push(editors);
+  addGroup(editors: readonly vscode.TextEditor[]) {
+    // group = new Grou
+    this.groups.push({
+      items: editors.map((editor) => {
+        return {
+          document: editor.document,
+          viewColumn: editor.viewColumn,
+        };
+      }),
+    });
   }
 }
+
+type Group = {
+  items: GroupItemState[];
+};
+
+type GroupItemState = {
+  readonly document: vscode.TextDocument;
+  viewColumn: vscode.ViewColumn | undefined;
+};
 
 class TabGroupPickItem implements QuickPickItem {
   label: string;
   description?: string | undefined;
-  //   public editors: readonly vscode.TextEditor[];
 
-  constructor(
-    public name: string,
-    public path: string,
-    public editors: readonly vscode.TextEditor[]
-  ) {
+  constructor(public name: string, public path: string, public group: Group) {
     this.label = name;
     this.description = path;
-    this.editors = editors;
+    this.group = group;
   }
 }
 
@@ -54,43 +58,52 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const tabInfo = vscode.commands.registerCommand("tabs.tabInfo", () => {
-    // const tabArray = vscode.window.tabGroups.all;
-    console.log(tabContext.getTabs());
+    console.log(tabContext.getGroups());
   });
 
   const addGroup = vscode.commands.registerCommand("tabs.addGroup", () => {
-    // const tabArray = vscode.window.tabGroups.all;
-    const activeTab = vscode.window.tabGroups.activeTabGroup;
-    if (activeTab.activeTab) {
-      tabContext.addGroup(activeTab.activeTab?.label);
-    }
-
     const visibleEditors = vscode.window.visibleTextEditors;
-    tabContext.addEditors(visibleEditors);
-
-    console.log(tabContext.getTabs());
+    tabContext.addGroup(visibleEditors);
   });
+
+  const closeCurrentEditors = async (
+    newGroupViewColumns: (vscode.ViewColumn | undefined)[]
+  ) => {
+    const currentTabs = vscode.window.tabGroups.all;
+    console.log(currentTabs);
+    for (const group of currentTabs) {
+      if (newGroupViewColumns.includes(group.viewColumn)) {
+        continue;
+      }
+
+      try {
+        await vscode.window.tabGroups.close(group);
+      } catch (error) {
+        console.log(`ERROR: ${error}`);
+      }
+    }
+  };
 
   const pickGroup = vscode.commands.registerCommand(
     "tabs.pickGroup",
     async () => {
-      console.log("HELPPP");
       const item = await vscode.window.showQuickPick(
-        tabContext.getEditors().map((item) => {
-          // item is a list of editors
-          return new TabGroupPickItem("lorem", "ipsum", item);
+        tabContext.getGroups().map((item) => {
+          return new TabGroupPickItem(
+            item.items[0].document.fileName,
+            "ipsum",
+            item
+          );
         }),
         { placeHolder: "pick an editor" }
       );
-      console.log("huh");
 
       if (item instanceof TabGroupPickItem) {
-        // @todo: close currently visible editors
+        await closeCurrentEditors(item.group.items.map((i) => i.viewColumn));
 
-        // show the editors
-        for (const editor of item.editors) {
-          vscode.window.showTextDocument(editor.document, {
-            viewColumn: editor.viewColumn,
+        for (const groupItem of item.group.items) {
+          vscode.window.showTextDocument(groupItem.document, {
+            viewColumn: groupItem.viewColumn,
           });
         }
       } else {
