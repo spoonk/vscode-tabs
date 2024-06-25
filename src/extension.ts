@@ -5,9 +5,11 @@ import { QuickPickItem } from "vscode";
 
 class TabGroupContext {
   groups: Group[];
+  currentGroupNum: number;
 
   constructor() {
     this.groups = [];
+    this.currentGroupNum = -1;
   }
 
   getGroups() {
@@ -64,6 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
   const addGroup = vscode.commands.registerCommand("tabs.addGroup", () => {
     const visibleEditors = vscode.window.visibleTextEditors;
     tabContext.addGroup(visibleEditors);
+    tabContext.currentGroupNum = tabContext.groups.length - 1; // current group is last group
   });
 
   const closeCurrentEditors = async (
@@ -71,16 +74,19 @@ export function activate(context: vscode.ExtensionContext) {
   ) => {
     const currentTabs = vscode.window.tabGroups.all;
     console.log(currentTabs);
+    const tabsToClose: vscode.TabGroup[] = [];
     for (const group of currentTabs) {
       if (newGroupViewColumns.includes(group.viewColumn)) {
         continue;
       }
+      tabsToClose.push(group);
+    }
 
-      try {
-        await vscode.window.tabGroups.close(group);
-      } catch (error) {
-        console.log(`ERROR: ${error}`);
-      }
+    // for (const group of tabsToClose) {
+    try {
+      await vscode.window.tabGroups.close(tabsToClose);
+    } catch (error) {
+      console.log(`ERROR: ${error}`);
     }
   };
 
@@ -88,28 +94,59 @@ export function activate(context: vscode.ExtensionContext) {
     "tabs.pickGroup",
     async () => {
       const item = await vscode.window.showQuickPick(
-        tabContext.getGroups().map((item) => {
+        tabContext.getGroups().map((item, index) => {
           return new TabGroupPickItem(
+            index.toString(),
             item.items[0].document.fileName,
-            "ipsum",
             item
+            // @ todo: simplify tabGroupPickItem to just use an id
           );
         }),
         { placeHolder: "pick an editor" }
       );
 
       if (item instanceof TabGroupPickItem) {
-        await closeCurrentEditors(item.group.items.map((i) => i.viewColumn));
-
-        for (const groupItem of item.group.items) {
-          vscode.window.showTextDocument(groupItem.document, {
-            viewColumn: groupItem.viewColumn,
-          });
-        }
+        loadTabGroup(Number(item.label));
       } else {
         console.log(item);
         vscode.window.showInformationMessage("raa");
       }
+    }
+  );
+
+  const loadTabGroup = async (groupNum: number) => {
+    const group = tabContext.getGroups()[groupNum];
+
+    await closeCurrentEditors(group.items.map((i) => i.viewColumn));
+    for (const groupItem of group.items) {
+      vscode.window.showTextDocument(groupItem.document, {
+        viewColumn: groupItem.viewColumn,
+      });
+    }
+
+    tabContext.currentGroupNum = groupNum;
+    vscode.window.showInformationMessage(`swapped to group ${groupNum}`);
+  };
+
+  const nextGroup = vscode.commands.registerCommand(
+    "tabs.nextGroup",
+    async () => {
+      const groupNumToLoad =
+        (tabContext.currentGroupNum + 1) % tabContext.groups.length;
+      await loadTabGroup(groupNumToLoad);
+    }
+  );
+
+  const previousGroup = vscode.commands.registerCommand(
+    "tabs.previousGroup",
+    async () => {
+      let groupNumToLoad = tabContext.currentGroupNum - 1;
+      if (groupNumToLoad < 0) {
+        // wrap back around
+        groupNumToLoad = tabContext.groups.length - 1;
+      }
+
+      await loadTabGroup(groupNumToLoad);
     }
   );
 

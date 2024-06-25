@@ -28,6 +28,26 @@
       {
         "command": "tabs.pickGroup",
         "title": "pick tab group"
+      },
+      {
+        "command": "tabs.nextGroup",
+        "title": "next tab group"
+      },
+      {
+        "command": "tabs.previousGroup",
+        "title": "previous tab group"
+      }
+    ],
+    "keybindings": [
+      {
+          "command": "tabs.nextGroup",
+          "key": "ctrl+alt+e",
+          "mac": "ctrl+shift+e"
+      },
+      {
+          "command": "tabs.previousGroup",
+          "key": "ctrl+alt+q",
+          "mac": "ctrl+shift+q"
       }
     ]
   },
