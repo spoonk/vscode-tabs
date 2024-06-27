@@ -4,10 +4,12 @@ import { QuickPickItem } from "vscode";
 class TabGroupContext {
   groups: Group[];
   currentGroupNum: number;
+  statusBarItems: vscode.StatusBarItem[];
 
   constructor() {
     this.groups = [];
     this.currentGroupNum = -1;
+    this.statusBarItems = [];
   }
 
   getGroups() {
@@ -64,8 +66,30 @@ export function activate(context: vscode.ExtensionContext) {
 
   const addGroup = vscode.commands.registerCommand("tabs.addGroup", () => {
     const visibleEditors = vscode.window.visibleTextEditors;
+    if (tabContext.groups.length >= 5) {
+      vscode.window.showErrorMessage("Cannot add more than 5 tab groups");
+      return;
+    }
+
     tabContext.addGroup(visibleEditors);
+    // set status bar text as not active for the group that is being
+    // deactivated
+    if (tabContext.groups.length > 1) {
+      tabContext.statusBarItems[
+        tabContext.currentGroupNum
+      ].text = ` ${tabContext.currentGroupNum.toString()} `;
+    }
     tabContext.currentGroupNum = tabContext.groups.length - 1; // current group is last group
+    const statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left,
+      100
+    );
+
+    statusBarItem.name = tabContext.currentGroupNum.toString();
+    statusBarItem.text = `[${tabContext.currentGroupNum.toString()}]`;
+
+    statusBarItem.show();
+    tabContext.statusBarItems.push(statusBarItem);
     vscode.window.showInformationMessage("added new group");
   });
 
@@ -73,7 +97,6 @@ export function activate(context: vscode.ExtensionContext) {
     newGroupViewColumns: (vscode.ViewColumn | undefined)[]
   ) => {
     const currentTabs = vscode.window.tabGroups.all;
-    console.log(currentTabs);
     const tabsToClose: vscode.TabGroup[] = [];
     for (const group of currentTabs) {
       if (newGroupViewColumns.includes(group.viewColumn)) {
@@ -85,7 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       await vscode.window.tabGroups.close(tabsToClose);
     } catch (error) {
-      console.log(`ERROR: ${error}`);
+      console.warn(`ERROR: ${error}`);
     }
   };
 
@@ -98,7 +121,6 @@ export function activate(context: vscode.ExtensionContext) {
             index.toString(),
             item.items[0].document.fileName,
             item
-            // @ todo: simplify tabGroupPickItem to just use an id
           );
         }),
         { placeHolder: "pick an editor" }
@@ -107,7 +129,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (item instanceof TabGroupPickItem) {
         loadTabGroup(Number(item.label));
       } else {
-        console.log(item);
         vscode.window.showInformationMessage("raa");
       }
     }
@@ -122,6 +143,13 @@ export function activate(context: vscode.ExtensionContext) {
         viewColumn: groupItem.viewColumn,
       });
     }
+
+    tabContext.statusBarItems[
+      tabContext.currentGroupNum
+    ].text = ` ${tabContext.currentGroupNum.toString()} `;
+
+    // set as active
+    tabContext.statusBarItems[groupNum].text = `[${groupNum}]`;
 
     tabContext.currentGroupNum = groupNum;
     vscode.window.showInformationMessage(`swapped to group ${groupNum}`);
