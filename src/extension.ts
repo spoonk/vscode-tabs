@@ -88,6 +88,11 @@ export function activate(context: vscode.ExtensionContext) {
     statusBarItem.name = tabContext.currentGroupNum.toString();
     statusBarItem.command = `tabs.pickGroup${tabContext.currentGroupNum}`;
     statusBarItem.text = `[${tabContext.currentGroupNum.toString()}]`;
+    statusBarItem.tooltip = `${tabContext.currentGroupNum}`;
+
+    statusBarItem.tooltip = visibleEditors
+      .map((item) => item.document.fileName.replace(/^.*[\\/]/, ""))
+      .join("\n");
 
     statusBarItem.show();
     tabContext.statusBarItems.push(statusBarItem);
