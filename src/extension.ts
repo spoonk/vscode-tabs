@@ -86,6 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     statusBarItem.name = tabContext.currentGroupNum.toString();
+    statusBarItem.command = `tabs.pickGroup${tabContext.currentGroupNum}`;
     statusBarItem.text = `[${tabContext.currentGroupNum.toString()}]`;
 
     statusBarItem.show();
