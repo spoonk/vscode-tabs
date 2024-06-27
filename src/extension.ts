@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { QuickPickItem } from "vscode";
 
@@ -17,7 +15,6 @@ class TabGroupContext {
   }
 
   addGroup(editors: readonly vscode.TextEditor[]) {
-    // group = new Grou
     this.groups.push({
       items: editors.map((editor) => {
         return {
@@ -44,7 +41,9 @@ class TabGroupPickItem implements QuickPickItem {
 
   constructor(public name: string, public path: string, public group: Group) {
     this.label = name;
-    this.description = path;
+    this.description = group.items
+      .map((item) => item.document.fileName.replace(/^.*[\\/]/, ""))
+      .join(" | ");
     this.group = group;
   }
 }
@@ -67,6 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
     const visibleEditors = vscode.window.visibleTextEditors;
     tabContext.addGroup(visibleEditors);
     tabContext.currentGroupNum = tabContext.groups.length - 1; // current group is last group
+    vscode.window.showInformationMessage("added new group");
   });
 
   const closeCurrentEditors = async (
@@ -82,7 +82,6 @@ export function activate(context: vscode.ExtensionContext) {
       tabsToClose.push(group);
     }
 
-    // for (const group of tabsToClose) {
     try {
       await vscode.window.tabGroups.close(tabsToClose);
     } catch (error) {
