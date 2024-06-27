@@ -16,11 +16,11 @@
       {
         "command": "tabs.helloWorld",
         "title": "Hello World"
-      }, 
+      },
       {
         "command": "tabs.tabInfo",
         "title": "tab info"
-      }, 
+      },
       {
         "command": "tabs.addGroup",
         "title": "add group from current tab"
@@ -36,23 +36,43 @@
       {
         "command": "tabs.previousGroup",
         "title": "previous tab group"
+      },
+      {
+        "command": "tabs.pickGroup0",
+        "title": "activate group 0"
+      },
+      {
+        "command": "tabs.pickGroup1",
+        "title": "activate group 1"
+      },
+      {
+        "command": "tabs.pickGroup2",
+        "title": "activate group 2"
+      },
+      {
+        "command": "tabs.pickGroup3",
+        "title": "activate group 3"
+      },
+      {
+        "command": "tabs.pickGroup4",
+        "title": "activate group 4"
       }
     ],
     "keybindings": [
       {
-          "command": "tabs.nextGroup",
-          "key": "ctrl+alt+e",
-          "mac": "ctrl+shift+e"
+        "command": "tabs.nextGroup",
+        "key": "ctrl+alt+e",
+        "mac": "ctrl+shift+e"
       },
       {
-          "command": "tabs.previousGroup",
-          "key": "ctrl+alt+q",
-          "mac": "ctrl+shift+q"
+        "command": "tabs.previousGroup",
+        "key": "ctrl+alt+q",
+        "mac": "ctrl+shift+q"
       },
       {
-          "command": "tabs.addGroup",
-          "key": "ctrl+alt+t",
-          "mac": "ctrl+shift+t"
+        "command": "tabs.addGroup",
+        "key": "ctrl+alt+t",
+        "mac": "ctrl+shift+t"
       }
     ]
   },

@@ -177,6 +177,29 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const pickGroupHelper = async (desiredGroupNum: number) => {
+    if (tabContext.currentGroupNum == desiredGroupNum) {
+      vscode.window.showWarningMessage(
+        `Group ${desiredGroupNum} already selected`
+      );
+      return;
+    } else if (tabContext.groups.length <= desiredGroupNum) {
+      vscode.window.showErrorMessage(`Group ${desiredGroupNum} doesn't exist`);
+      return;
+    }
+
+    loadTabGroup(desiredGroupNum);
+  };
+
+  for (const num of [0, 1, 2, 3, 4, 5]) {
+    // register all 5 pickers
+    vscode.commands.registerCommand(`tabs.pickGroup${num}`, async () => {
+      pickGroupHelper(num);
+    });
+
+    // @todo: register 5 deleters
+  }
+
   context.subscriptions.push(disposable);
   context.subscriptions.push(tabInfo);
   context.subscriptions.push(addGroup);
