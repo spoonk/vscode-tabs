@@ -14,10 +14,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "tabs.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "tabs.tabInfo",
         "title": "tab info"
       },
