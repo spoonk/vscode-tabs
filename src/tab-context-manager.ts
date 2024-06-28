@@ -1,16 +1,10 @@
 import * as vscode from "vscode";
 import { QuickPickItem } from "vscode";
 
-// refactor todo list
-// - don't access fields directly
-// - extract common checks on fields into functions with clear names
-
 export class TabGroupContextManager {
   private groups: Group[];
   private currGroupNum: number;
-  //   private statusBarItems: vscode.StatusBarItem[];
 
-  // @todo: unify groups and statusBarItems, since they will always occur together
   constructor() {
     this.groups = [];
     this.currGroupNum = -1;
@@ -37,7 +31,7 @@ export class TabGroupContextManager {
       return;
     }
 
-    this.groups[this.currGroupNum].statusBarItem.text = text;
+    this.groups[itemIndex].statusBarItem.text = text;
   }
 
   private initializeNewStatusBarItem(editors: readonly vscode.TextEditor[]) {
@@ -50,7 +44,6 @@ export class TabGroupContextManager {
     statusBarItem.command = `tabs.pickGroup${this.currentGroupNum()}`;
     statusBarItem.text = `[${this.currentGroupNum().toString()}]`;
     statusBarItem.tooltip = `${this.currentGroupNum()}`;
-
     statusBarItem.tooltip = editors
       .map((item) => item.document.fileName.replace(/^.*[\\/]/, ""))
       .join("\n");
@@ -68,7 +61,7 @@ export class TabGroupContextManager {
   }
 
   addGroup(editors: readonly vscode.TextEditor[]) {
-    if (this.numGroups() >= 0) {
+    if (this.numGroups() > 0) {
       this.unfocusGroup(this.currGroupNum);
     }
     this.currGroupNum += 1;

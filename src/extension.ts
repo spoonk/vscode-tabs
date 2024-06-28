@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { QuickPickItem } from "vscode";
 import {
   TabGroupContextManager,
   TabGroupPickItem,
