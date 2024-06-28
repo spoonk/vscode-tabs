@@ -82,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
     tabContext.currentGroupNum = tabContext.groups.length - 1; // current group is last group
     const statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
-      100
+      100000
     );
 
     statusBarItem.name = tabContext.currentGroupNum.toString();
