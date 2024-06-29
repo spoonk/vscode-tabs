@@ -34,10 +34,6 @@ export class TabGroupContextManager {
     this.groups[itemIndex].statusBarItem.text = text;
   }
 
-  // @todo: will probably need to show / hide items rather than deleting them
-  // this means adding a group will also need to check if it doesn't exist
-  // or if there's already a status bar item for them
-  // This means I may need to separate out status bar item and group again
   deleteGroup(groupNum: number): void {
     // @note: for now, will just recreate status bar items a haha
     // rather than reusing them
@@ -46,9 +42,6 @@ export class TabGroupContextManager {
     // focus the group that replaced this one (unless was last group)
 
     if (this.numGroups() === 0) return;
-
-    // @note: need to unfocus group to properly close editors?
-
     // remove the group
     this.groups[groupNum].statusBarItem.hide();
     this.groups.splice(groupNum, 1);
@@ -71,6 +64,15 @@ export class TabGroupContextManager {
       this.currGroupNum = -1;
     }
   }
+
+  deleteAllGroups = async () => {
+    for (const barItem of this.groups.map((group) => group.statusBarItem)) {
+      barItem.hide();
+    }
+
+    this.groups = [];
+    this.currGroupNum = -1;
+  };
 
   private initializeNewStatusBarItem(editors: readonly vscode.TextEditor[]) {
     const statusBarItem = vscode.window.createStatusBarItem(

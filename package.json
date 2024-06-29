@@ -56,6 +56,14 @@
       {
         "command": "tabs.deleteRecentGroup",
         "title": "delete most recently focused group"
+      },
+      {
+        "command": "tabs.deleteGroup",
+        "title": "pick group to delete"
+      },
+      {
+        "command": "tabs.deleteAllGroups",
+        "title": "delete all groups"
       }
     ],
     "keybindings": [

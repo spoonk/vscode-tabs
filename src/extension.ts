@@ -45,18 +45,53 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+
+  const pickGroupToDelete = vscode.commands.registerCommand(
+    "tabs.deleteGroup",
+    async () => {
+      const item = await vscode.window.showQuickPick(
+        tabContext.getGroups().map((item, index) => {
+          return new TabGroupPickItem(
+            index.toString(),
+            item.items[0].document.fileName,
+            item
+          );
+        }),
+        { placeHolder: "pick a group to delete" }
+      );
+
+      if (item instanceof TabGroupPickItem) {
+        tabContext.deleteGroup(Number(item.label));
+      } else {
+        vscode.window.showInformationMessage("raa");
+      }
+    }
+  );
+
   const nextGroup = vscode.commands.registerCommand(
     "tabs.nextGroup",
     async () => {
+      if (tabContext.numGroups() === 0) {
+        return;
+      }
+
       const groupNumToLoad =
         (tabContext.currentGroupNum() + 1) % tabContext.numGroups();
       await tabContext.loadTabGroup(groupNumToLoad);
     }
   );
 
+  vscode.commands.registerCommand("tabs.deleteAllGroups", async () => {
+    tabContext.deleteAllGroups();
+    // vscode.window.showErrorMessage("not implemented");
+  });
+
   const previousGroup = vscode.commands.registerCommand(
     "tabs.previousGroup",
     async () => {
+      if (tabContext.numGroups() === 0) {
+        return;
+      }
       let groupNumToLoad = tabContext.currentGroupNum() - 1;
       if (groupNumToLoad < 0) {
         // wrap back around
