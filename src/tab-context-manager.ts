@@ -26,12 +26,47 @@ export class TabGroupContextManager {
     if (
       itemIndex < 0 ||
       itemIndex >= this.numGroups() ||
-      this.currGroupNum == -1
+      this.currGroupNum === -1
     ) {
       return;
     }
 
     this.groups[itemIndex].statusBarItem.text = text;
+  }
+
+  // @todo: will probably need to show / hide items rather than deleting them
+  // this means adding a group will also need to check if it doesn't exist
+  // or if there's already a status bar item for them
+  // This means I may need to separate out status bar item and group again
+  deleteGroup(groupNum: number): void {
+    // @note: for now, will just recreate status bar items a haha
+    // rather than reusing them
+    // remove from array
+    // adjust labels of the things following the group to be 1 <
+    // focus the group that replaced this one (unless was last group)
+
+    if (this.numGroups() === 0) return;
+
+    // remove the group
+    this.groups[groupNum].statusBarItem.hide();
+    this.groups.splice(groupNum, 1);
+
+    // adjust the labels of subsequent groups
+    for (let i = groupNum; i < this.numGroups(); i++) {
+      this.updateStatusBarItemText(` ${i} `, i);
+    }
+
+    if (this.numGroups() !== 0) {
+      // if we deleted the last group, focus next smallest
+      // otherwise, focus same group num
+      this.focusGroup(groupNum === this.numGroups() ? groupNum - 1 : groupNum);
+    } else {
+      this.currGroupNum = -1;
+    }
+
+    // @todo: focus other group
+    // @todo: check if there are 0 groups remaining
+    // -hm it might be weird to focus another gorup if the deleted layout is "dirty"
   }
 
   private initializeNewStatusBarItem(editors: readonly vscode.TextEditor[]) {

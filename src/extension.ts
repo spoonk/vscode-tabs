@@ -67,8 +67,17 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  vscode.commands.registerCommand("tabs.deleteRecentGroup", async () => {
+    if (tabContext.numGroups() === 0) {
+      return;
+    }
+
+    // @todo: might need to await
+    tabContext.deleteGroup(tabContext.currentGroupNum());
+  });
+
   const pickGroupHelper = async (desiredGroupNum: number) => {
-    if (tabContext.currentGroupNum() == desiredGroupNum) {
+    if (tabContext.currentGroupNum() === desiredGroupNum) {
       vscode.window.showWarningMessage(
         `Group ${desiredGroupNum} already selected`
       );
