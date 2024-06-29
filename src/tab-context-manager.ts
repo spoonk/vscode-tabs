@@ -47,6 +47,8 @@ export class TabGroupContextManager {
 
     if (this.numGroups() === 0) return;
 
+    // @note: need to unfocus group to properly close editors?
+
     // remove the group
     this.groups[groupNum].statusBarItem.hide();
     this.groups.splice(groupNum, 1);
@@ -59,20 +61,21 @@ export class TabGroupContextManager {
     if (this.numGroups() !== 0) {
       // if we deleted the last group, focus next smallest
       // otherwise, focus same group num
-      this.focusGroup(groupNum === this.numGroups() ? groupNum - 1 : groupNum);
+      const groupToShow = this.numGroups() ? groupNum - 1 : groupNum;
+      this.closeCurrentEditors(
+        this.groups[groupToShow].items.map((item) => item.viewColumn)
+      );
+
+      this.focusGroup(groupToShow);
     } else {
       this.currGroupNum = -1;
     }
-
-    // @todo: focus other group
-    // @todo: check if there are 0 groups remaining
-    // -hm it might be weird to focus another gorup if the deleted layout is "dirty"
   }
 
   private initializeNewStatusBarItem(editors: readonly vscode.TextEditor[]) {
     const statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
-      100000
+      100000 - this.currentGroupNum()
     );
 
     statusBarItem.name = this.currentGroupNum().toString();
@@ -87,22 +90,20 @@ export class TabGroupContextManager {
     return statusBarItem;
   }
 
-  async unfocusGroup(groupNum: number) {
+  async unfocusGroup(groupNum: number, newGroupNum: number) {
     await this.closeCurrentEditors(
-      this.groups[groupNum].items.map((i) => i.viewColumn)
+      this.groups[newGroupNum].items.map((i) => i.viewColumn)
     );
     // sets the text of status bar item to be unfocused variant
     this.updateStatusBarItemText(` ${groupNum} `, groupNum);
   }
 
   addGroup(editors: readonly vscode.TextEditor[]) {
-    if (this.numGroups() > 0) {
-      this.unfocusGroup(this.currGroupNum);
-    }
-    this.currGroupNum += 1;
-
+    // this.currGroupNum += 1;
     // no need to focus group when adding, since it will definitely already be focused
 
+    const prevGroupNum = this.currGroupNum;
+    this.currGroupNum = this.numGroups();
     const statusBarItem = this.initializeNewStatusBarItem(editors);
     this.groups.push({
       items: editors.map((editor) => {
@@ -113,8 +114,14 @@ export class TabGroupContextManager {
       }),
       statusBarItem,
     });
+
+    if (this.numGroups() > 1) {
+      this.unfocusGroup(prevGroupNum, this.currGroupNum);
+    }
   }
 
+  // maybe this should be called something like prepareEditorsForGroup
+  // idk
   closeCurrentEditors = async (
     newGroupViewColumns: (vscode.ViewColumn | undefined)[]
   ) => {
@@ -146,9 +153,8 @@ export class TabGroupContextManager {
   }
 
   async loadTabGroup(groupNum: number) {
-    this.unfocusGroup(this.currGroupNum);
-    this.focusGroup(groupNum);
-    vscode.window.showInformationMessage(`swapped to group ${groupNum}`);
+    await this.unfocusGroup(this.currGroupNum, groupNum);
+    await this.focusGroup(groupNum);
   }
 }
 
