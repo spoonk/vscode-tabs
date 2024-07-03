@@ -3,6 +3,7 @@
   "displayName": "tabs",
   "description": "",
   "version": "0.0.1",
+  "repository": "github:spoonk/vscode-tabs",
   "engines": {
     "vscode": "^1.90.0"
   },
